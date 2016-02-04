@@ -4,17 +4,32 @@ indent() {
   sed -u 's/^/       /'
 }
 
-echo "-----> Found a .vendor_urls file"
+echo "-----> Found a .terraform_url file"
 
 # Bail early but noisily
-if [ ! -s $1/.vendor_urls ]; then
-  echo ".vendor_urls empty. Skipping." | indent
+if [ ! -s $1/.terraform_url ]; then
+  echo ".terraform_url empty. Skipping." | indent
   exit 0
 fi
 
-cd $1
+declare -r BUILD_DIR="$1"
+declare -r CACHE_DIR="$2"
+declare -r URL=`cat ${BUILD_DIR}/.terraform_url`
+declare -r FILE=$(basename ${URL})
+declare -r PKG="${CACHE_DIR}/${FILE}"
+declare -r BIN_SRC="${CACHE_DIR}/bin"
+declare -r BIN_DST="${BUILD_DIR}/bin"
 
-while read url; do
-  echo Vendoring $url | indent
-  curl -s $url | tar xz
-done < .vendor_urls
+mkdir -p ${BIN_SRC} ${BIN_DST}
+
+if [ -f "${PKG}" -a -f "${BIN_SRC}" ]; then
+  echo "Cached package found"
+else
+  rm -rf ${BIN_SRC}/*
+  echo "Downloading..."
+  echo "From ${URL} | indent"
+  echo "To: ${PKG}"
+  curl -s ${URL} > ${PKG}
+  unzip ${PKG} -d ${BIN_SRC}
+fi
+cp -r ${BIN_SRC}/* ${BIN_DST}
