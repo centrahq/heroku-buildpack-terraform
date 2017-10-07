@@ -31,5 +31,6 @@ else
   echo "To: ${PKG}"
   curl -s ${URL} > ${PKG}
   unzip ${PKG} -d ${BIN_SRC}
+  wget -O ${BIN_SRC}/jq https://centra-files.s3.amazonaws.com/jq
 fi
 cp -r ${BIN_SRC}/* ${BIN_DST}
